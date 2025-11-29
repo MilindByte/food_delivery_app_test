@@ -49,9 +49,9 @@
 
 | Component | URL | Purpose |
 |-----------|-----|---------|
-| Customer App | `http://localhost/food-delivery-app/customer-app/` | Order food |
-| Restaurant Panel | `http://localhost/food-delivery-app/restaurant-panel/` | Manage orders |
-| Rider App | `http://localhost/food-delivery-app/rider-app/` | Deliver orders |
+| Customer App | `https://milindbyte.github.io/food_delivery_app_test/customer-app/` | Order food |
+| Restaurant Panel | `https://milindbyte.github.io/food_delivery_app_test/restaurant-panel/dashboard.html` | Manage orders |
+| Rider App | `https://milindbyte.github.io/food_delivery_app_test/rider-app/dashboard.html` | Deliver orders |
 
 ---
 
@@ -466,5 +466,6 @@ sequenceDiagram
 3. Restaurant completes order
 
 ---
+
 
 
