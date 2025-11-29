@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/rider-style.css">
+</head>
+
+<body class="rider-app">
+    <!-- Header -->
+    <div class="rider-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0"><i class="fas fa-motorcycle me-2"></i>Rider Dashboard</h5>
+                    <small id="riderName"></small>
+                </div>
+                <div class="availability-toggle">
+                    <span id="statusText">Offline</span>
+                    <label class="switch">
+                        <input type="checkbox" id="availabilityToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <a href="#" onclick="handleLogout(event)" class="text-white ms-3"><i
+                            class="fas fa-sign-out-alt"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <!-- Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card" style="border-left: 4px solid #667eea;">
+                    <div class="stat-label">Today's Earnings</div>
+                    <div class="stat-value text-primary" id="todayEarnings">₹0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="border-left: 4px solid #4CAF50;">
+                    <div class="stat-label">Total Deliveries</div>
+                    <div class="stat-value text-success" id="totalDeliveries">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="border-left: 4px solid #FFC107;">
+                    <div class="stat-label">Rating</div>
+                    <div class="stat-value text-warning" id="riderRating">0.0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card" style="border-left: 4px solid #17A2B8;">
+                    <div class="stat-label">Active Orders</div>
+                    <div class="stat-value text-info" id="activeOrders">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Delivery -->
+        <div id="activeDeliverySection" style="display: none;" class="mb-4">
+            <h5 class="mb-3">Active Delivery</h5>
+            <div id="activeDeliveryCard"></div>
+        </div>
+
+        <!-- Available Orders -->
+        <div id="availableOrdersSection">
+            <h5 class="mb-3">Available Orders <button class="btn btn-sm btn-primary" onclick="loadOrders()"><i
+                        class="fas fa-sync"></i></button></h5>
+            <div id="availableOrders">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="active"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="history.html"><i class="fas fa-history"></i><span>History</span></a>
+        <a href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/rider-api.js"></script>
+    <script>
+        let currentRider = null;
+        let refreshInterval = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            await checkAuth();
+            await loadDashboard();
+            refreshInterval = setInterval(loadOrders, 15000);
+        });
+
+        async function checkAuth() {
+            try {
+                const response = await RiderAPI.checkAuth();
+                if (response.authenticated) {
+                    currentRider = response.rider;
+                    document.getElementById('riderName').textContent = currentRider.name;
+                    document.getElementById('riderRating').textContent = currentRider.rating;
+                    document.getElementById('totalDeliveries').textContent = currentRider.total_deliveries;
+                    const toggle = document.getElementById('availabilityToggle');
+                    toggle.checked = currentRider.is_available == 1;
+                    updateStatusText(currentRider.is_available == 1);
+                    toggle.addEventListener('change', toggleAvailability);
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const earningsResponse = await RiderAPI.getEarnings();
+                document.getElementById('todayEarnings').textContent = '₹' + (earningsResponse.summary.today_earnings || 0);
+                await loadOrders();
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+
+        async function loadOrders() {
+            try {
+                const assignedResponse = await RiderAPI.getAssignedOrders();
+                const assignedOrders = assignedResponse.data;
+                document.getElementById('activeOrders').textContent = assignedOrders.length;
+
+                if (assignedOrders.length > 0) {
+                    document.getElementById('activeDeliverySection').style.display = 'block';
+                    displayActiveDelivery(assignedOrders[0]);
+                } else {
+                    document.getElementById('activeDeliverySection').style.display = 'none';
+                }
+
+                if (currentRider.is_available) {
+                    const availableResponse = await RiderAPI.getAvailableOrders();
+                    displayAvailableOrders(availableResponse.data);
+                } else {
+                    document.getElementById('availableOrders').innerHTML = '<p class="text-center text-muted py-5">Go online to see available orders</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load orders:', error);
+            }
+        }
+
+        function displayActiveDelivery(order) {
+            const statusActions = {
+                'preparing': { next: 'on_the_way', label: 'Mark Picked Up', icon: 'check' },
+                'ready': { next: 'on_the_way', label: 'Mark Picked Up', icon: 'check' },
+                'on_the_way': { next: 'delivered', label: 'Mark Delivered', icon: 'check-circle' }
+            };
+            const action = statusActions[order.status];
+
+            let html = `
+                <div class="order-card border-primary">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6><i class="fas fa-store me-2"></i>${order.restaurant_name}</h6>
+                            <small class="text-muted">${order.restaurant_address}</small>
+                        </div>
+                        <span class="badge badge-${order.status}">${order.status.replace('_', ' ').toUpperCase()}</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong><i class="fas fa-user me-2"></i>${order.customer_name}</strong>
+                        <button class="btn btn-sm btn-call ms-2" onclick="window.location.href='tel:${order.customer_phone}'">
+                            <i class="fas fa-phone"></i> Call
+                        </button>
+                        <br><small class="text-muted">${order.customer_phone}</small>
+                        <br><small><i class="fas fa-map-marker-alt me-2"></i>${order.delivery_address}</small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-success">₹${order.delivery_fee} Fee</strong><br>
+                            <small>${order.item_count} items • #${order.id}</small>
+                        </div>
+                        ${action ? `<button class="btn btn-success" onclick="updateStatus(${order.id}, '${action.next}')">
+                            <i class="fas fa-${action.icon} me-2"></i>${action.label}
+                        </button>` : ''}
+                    </div>
+                </div>
+            `;
+            document.getElementById('activeDeliveryCard').innerHTML = html;
+        }
+
+        function displayAvailableOrders(orders) {
+            const container = document.getElementById('availableOrders');
+            if (orders.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted py-5">No available orders right now</p>';
+                return;
+            }
+
+            let html = '';
+            orders.forEach(order => {
+                html += `
+                    <div class="order-card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-1">${order.restaurant_name}</h6>
+                                <small class="text-muted">${order.restaurant_address}</small>
+                            </div>
+                            <span class="badge bg-warning text-dark">NEW</span>
+                        </div>
+                        <div class="mb-2">
+                            <small><i class="fas fa-map-marker-alt me-2"></i>${order.delivery_address}</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="text-success">₹${order.delivery_fee}</strong>
+                            <button class="btn btn-sm btn-accept" onclick="acceptOrder(${order.id})">
+                                <i class="fas fa-check me-1"></i>Accept
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function toggleAvailability() {
+            try {
+                const response = await RiderAPI.toggleAvailability();
+                currentRider.is_available = response.is_available;
+                updateStatusText(response.is_available);
+                await loadOrders();
+            } catch (error) {
+                alert('Failed to update availability');
+                document.getElementById('availabilityToggle').checked = !document.getElementById('availabilityToggle').checked;
+            }
+        }
+
+        function updateStatusText(isAvailable) {
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = isAvailable ? 'Online' : 'Offline';
+            statusText.style.color = isAvailable ? '#4CAF50' : '#ccc';
+        }
+
+        async function acceptOrder(orderId) {
+            if (!confirm('Accept this order?')) return;
+            try {
+                await RiderAPI.acceptOrder(orderId);
+                alert('Order accepted!');
+                await loadOrders();
+            } catch (error) {
+                alert('Failed: ' + error.message);
+            }
+        }
+
+        async function updateStatus(orderId, status) {
+            try {
+                await RiderAPI.updateOrderStatus(orderId, status);
+                if (status === 'delivered') {
+                    alert('Delivery completed!');
+                }
+                await loadDashboard();
+            } catch (error) {
+                alert('Failed: ' + error.message);
+            }
+        }
+
+        async function handleLogout(e) {
+            e.preventDefault();
+            if (confirm('Logout?')) {
+                await RiderAPI.logout();
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+
+</html>

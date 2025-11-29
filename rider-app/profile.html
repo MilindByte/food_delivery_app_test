@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/rider-style.css">
+</head>
+
+<body class="rider-app">
+    <div class="rider-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Profile</h5>
+                <a href="dashboard.html" class="text-white"><i class="fas fa-arrow-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Rider Information</h5>
+                <div class="row g-3" id="profileInfo">
+                    <div class="col-12 text-center">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Performance Stats</h5>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <i class="fas fa-star text-warning fs-2"></i>
+                            <div class="fw-bold mt-2" id="profileRating">0.0</div>
+                            <small class="text-muted">Rating</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <i class="fas fa-box text-success fs-2"></i>
+                            <div class="fw-bold mt-2" id="profileDeliveries">0</div>
+                            <small class="text-muted">Deliveries</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Settings</h5>
+                <div class="list-group list-group-flush">
+                    <button class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                        <i class="fas fa-bell me-3"></i>Notifications
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                        <i class="fas fa-language me-3"></i>Language
+                    </button>
+                    <button class="list-group-item list-group-item-action" onclick="alert('Feature coming soon!')">
+                        <i class="fas fa-question-circle me-3"></i>Help & Support
+                    </button>
+                    <button class="list-group-item list-group-item-action text-danger" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt me-3"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="history.html"><i class="fas fa-history"></i><span>History</span></a>
+        <a href="profile.html" class="active"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/rider-api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            await loadProfile();
+        });
+
+        async function loadProfile() {
+            try {
+                const response = await RiderAPI.checkAuth();
+                if (!response.authenticated) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const rider = response.rider;
+
+                document.getElementById('profileRating').textContent = rider.rating;
+                document.getElementById('profileDeliveries').textContent = rider.total_deliveries;
+
+                const html = `
+                    <div class="col-md-6">
+                        <label class="text-muted small">Name</label>
+                        <div class="fw-bold">${rider.name}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Email</label>
+                        <div class="fw-bold">${rider.email}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Phone</label>
+                        <div class="fw-bold">${rider.phone}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Vehicle</label>
+                        <div class="fw-bold text-capitalize">${rider.vehicle_type}</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted small">Status</label>
+                        <div>
+                            <span class="badge ${rider.is_verified ? 'bg-success' : 'bg-warning'}">
+                                ${rider.is_verified ? 'Verified' : 'Pending Verification'}
+                            </span>
+                            <span class="badge ${rider.is_available ? 'bg-primary' : 'bg-secondary'} ms-2">
+                                ${rider.is_available ? 'Available' : 'Offline'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('profileInfo').innerHTML = html;
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+                window.location.href = 'index.html';
+            }
+        }
+
+        async function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                await RiderAPI.logout();
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+
+</html>
