@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/restaurant-style.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-store me-2"></i>
+            <span id="restaurantName">Restaurant Panel</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="orders.html"><i class="fas fa-shopping-bag"></i> Orders</a></li>
+            <li><a href="menu.html"><i class="fas fa-utensils"></i> Menu</a></li>
+            <li><a href="#" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <button class="btn btn-link" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="ms-auto" id="userInfo"></div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="container-fluid p-4">
+            <h1 class="h3 fw-bold mb-4">Dashboard</h1>
+
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card bg-primary text-white">
+                        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="totalOrders">0</div>
+                            <div class="stat-label">Total Orders</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-warning text-white">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="pendingOrders">0</div>
+                            <div class="stat-label">Pending Orders</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-success text-white">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="completedOrders">0</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-info text-white">
+                        <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="totalRevenue">₹0</div>
+                            <div class="stat-label">Total Revenue</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Recent Orders</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recentOrdersContent">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/restaurant-api.js"></script>
+    <script>
+        let currentRestaurant = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            await checkAuth();
+            await loadDashboard();
+        });
+
+        async function checkAuth() {
+            try {
+                const response = await RestaurantAPI.checkAuth();
+                if (response.authenticated) {
+                    currentRestaurant = response.restaurant;
+                    document.getElementById('restaurantName').textContent = currentRestaurant.name;
+                    document.getElementById('userInfo').innerHTML = `
+                        <span class="me-3"><i class="fas fa-store me-1"></i>${currentRestaurant.name}</span>
+                    `;
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const ordersResponse = await RestaurantAPI.getOrders();
+                const orders = ordersResponse.data;
+
+                // Calculate stats
+                const pending = orders.filter(o => o.status === 'pending' || o.status === 'confirmed').length;
+                const completed = orders.filter(o => o.status === 'delivered').length;
+                const totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.total_amount), 0);
+
+                document.getElementById('totalOrders').textContent = orders.length;
+                document.getElementById('pendingOrders').textContent = pending;
+                document.getElementById('completedOrders').textContent = completed;
+                document.getElementById('totalRevenue').textContent = '₹' + totalRevenue.toFixed(2);
+
+                // Display recent orders
+                displayRecentOrders(orders.slice(0, 5));
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+
+        function displayRecentOrders(orders) {
+            const container = document.getElementById('recentOrdersContent');
+
+            if (orders.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">No orders yet</p>';
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table">';
+            html += '<thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+
+            orders.forEach(order => {
+                const statusClass = getStatusClass(order.status);
+                html += `
+                    <tr>
+                        <td>#${order.id}</td>
+                        <td>${order.customer_name}</td>
+                        <td>${order.item_count} items</td>
+                        <td>₹${order.total_amount}</td>
+                        <td><span class="badge ${statusClass}">${order.status}</span></td>
+                        <td><a href="orders.html" class="btn btn-sm btn-primary">View</a></td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        function getStatusClass(status) {
+            const map = {
+                'pending': 'bg-warning',
+                'confirmed': 'bg-info',
+                'preparing': 'bg-primary',
+                'on_the_way': 'bg-success',
+                'delivered': 'bg-success',
+                'cancelled': 'bg-danger'
+            };
+            return map[status] || 'bg-secondary';
+        }
+
+        async function handleLogout(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    await RestaurantAPI.logout();
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

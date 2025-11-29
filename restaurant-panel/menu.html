@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/restaurant-style.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-store me-2"></i>
+            <span id="restaurantName">Restaurant Panel</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="orders.html"><i class="fas fa-shopping-bag"></i> Orders</a></li>
+            <li><a href="menu.html" class="active"><i class="fas fa-utensils"></i> Menu</a></li>
+            <li><a href="#" onclick="handleLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <button class="btn btn-link"><i class="fas fa-bars"></i></button>
+            <div class="ms-auto" id="userInfo"></div>
+        </div>
+
+        <div class="container-fluid p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 fw-bold">Menu Management</h1>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                    <i class="fas fa-plus me-2"></i>Add New Item
+                </button>
+            </div>
+
+            <!-- Menu Items -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div id="menuContent">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div class="modal fade" id="addItemModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Menu Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addItemForm">
+                        <div class="mb-3">
+                            <label class="form-label">Item Name *</label>
+                            <input type="text" class="form-control" id="itemName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="itemDesc" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Price *</label>
+                            <input type="number" class="form-control" id="itemPrice" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" class="form-control" id="itemImage">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-check-label me-3">
+                                <input type="checkbox" class="form-check-input" id="itemVeg" checked> Vegetarian
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Item</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div class="modal fade" id="editItemModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Menu Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editItemForm">
+                        <input type="hidden" id="editItemId">
+                        <div class="mb-3">
+                            <label class="form-label">Item Name *</label>
+                            <input type="text" class="form-control" id="editItemName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="editItemDesc" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Price *</label>
+                            <input type="number" class="form-control" id="editItemPrice" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" class="form-control" id="editItemImage">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-check-label me-3">
+                                <input type="checkbox" class="form-check-input" id="editItemVeg"> Vegetarian
+                            </label>
+                            <label class="form-check-label">
+                                <input type="checkbox" class="form-check-input" id="editItemAvailable"> Available
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Update Item</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/restaurant-api.js"></script>
+    <script>
+        let currentRestaurant = null;
+        const addModal = new bootstrap.Modal(document.getElementById('addItemModal'));
+        const editModal = new bootstrap.Modal(document.getElementById('editItemModal'));
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            await checkAuth();
+            await loadMenu();
+
+            document.getElementById('addItemForm').addEventListener('submit', handleAddItem);
+            document.getElementById('editItemForm').addEventListener('submit', handleEditItem);
+        });
+
+        async function checkAuth() {
+            try {
+                const response = await RestaurantAPI.checkAuth();
+                if (response.authenticated) {
+                    currentRestaurant = response.restaurant;
+                    document.getElementById('restaurantName').textContent = currentRestaurant.name;
+                    document.getElementById('userInfo').textContent = currentRestaurant.name;
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        async function loadMenu() {
+            const container = document.getElementById('menuContent');
+            container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+
+            try {
+                const response = await RestaurantAPI.getMenu();
+                displayMenu(response.data);
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-danger">Failed to load menu</div>';
+            }
+        }
+
+        function displayMenu(items) {
+            const container = document.getElementById('menuContent');
+
+            if (items.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted py-5">No menu items yet. Add your first item!</p>';
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-hover"><thead><tr><th>Item</th><th>Description</th><th>Price</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+            items.forEach(item => {
+                html += `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                ${item.image_url ? `<img src="${item.image_url}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded me-2" onerror="this.src='https://via.placeholder.com/50'">` : ''}
+                                <strong>${item.name}</strong>
+                            </div>
+                        </td>
+                        <td><small>${item.description || '-'}</small></td>
+                        <td><strong>₹${item.price}</strong></td>
+                        <td>${item.is_veg ? '<span class="badge bg-success">Veg</span>' : '<span class="badge bg-danger">Non-Veg</span>'}</td>
+                        <td>${item.is_available ? '<span class="badge bg-success">Available</span>' : '<span class="badge bg-secondary">Unavailable</span>'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick='editItem(${JSON.stringify(item)})'><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm ${item.is_available ? 'btn-warning' : 'btn-success'}" onclick="toggleAvailability(${item.id}, ${!item.is_available})">
+                                <i class="fas fa-${item.is_available ? 'eye-slash' : 'eye'}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        async function handleAddItem(e) {
+            e.preventDefault();
+
+            const item = {
+                name: document.getElementById('itemName').value,
+                description: document.getElementById('itemDesc').value,
+                price: document.getElementById('itemPrice').value,
+                image_url: document.getElementById('itemImage').value,
+                is_veg: document.getElementById('itemVeg').checked
+            };
+
+            try {
+                await RestaurantAPI.addMenuItem(item);
+                addModal.hide();
+                document.getElementById('addItemForm').reset();
+                await loadMenu();
+                alert('Item added successfully!');
+            } catch (error) {
+                alert('Failed to add item: ' + error.message);
+            }
+        }
+
+        function editItem(item) {
+            document.getElementById('editItemId').value = item.id;
+            document.getElementById('editItemName').value = item.name;
+            document.getElementById('editItemDesc').value = item.description || '';
+            document.getElementById('editItemPrice').value = item.price;
+            document.getElementById('editItemImage').value = item.image_url || '';
+            document.getElementById('editItemVeg').checked = item.is_veg == 1;
+            document.getElementById('editItemAvailable').checked = item.is_available == 1;
+            editModal.show();
+        }
+
+        async function handleEditItem(e) {
+            e.preventDefault();
+
+            const itemId = document.getElementById('editItemId').value;
+            const updates = {
+                name: document.getElementById('editItemName').value,
+                description: document.getElementById('editItemDesc').value,
+                price: document.getElementById('editItemPrice').value,
+                image_url: document.getElementById('editItemImage').value,
+                is_veg: document.getElementById('editItemVeg').checked,
+                is_available: document.getElementById('editItemAvailable').checked
+            };
+
+            try {
+                await RestaurantAPI.updateMenuItem(itemId, updates);
+                editModal.hide();
+                await loadMenu();
+                alert('Item updated successfully!');
+            } catch (error) {
+                alert('Failed to update item: ' + error.message);
+            }
+        }
+
+        async function toggleAvailability(itemId, available) {
+            try {
+                await RestaurantAPI.updateMenuItem(itemId, { is_available: available });
+                await loadMenu();
+            } catch (error) {
+                alert('Failed to update availability: ' + error.message);
+            }
+        }
+
+        async function deleteItem(itemId) {
+            if (!confirm('Are you sure you want to delete this item?')) return;
+
+            try {
+                await RestaurantAPI.deleteMenuItem(itemId);
+                await loadMenu();
+                alert('Item deleted successfully!');
+            } catch (error) {
+                alert('Failed to delete item: ' + error.message);
+            }
+        }
+
+        async function handleLogout(e) {
+            e.preventDefault();
+            if (confirm('Logout?')) {
+                await RestaurantAPI.logout();
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+
+</html>
