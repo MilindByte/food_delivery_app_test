@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Food Delivery</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-card {
+            max-width: 450px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1 class="h2 fw-bold mb-2">Food Delivery App</h1>
+                <p class="mb-0">Welcome back! Please login to your account</p>
+            </div>
+
+            <div class="p-4">
+                <!-- Alert for messages -->
+                <div id="alertContainer"></div>
+
+                <!-- Login Form -->
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="loginEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" id="loginBtn">
+                        Login
+                    </button>
+                </form>
+
+                <hr class="my-4">
+
+                <p class="text-center text-muted small">Don't have an account?</p>
+                <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#registerModal">
+                    Create Account
+                </button>
+
+                <div class="text-center mt-3">
+                    <a href="index.html" class="text-decoration-none small">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="registerName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="registerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="registerEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="registerPassword" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPhone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="registerPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerAddress" class="form-label">Address</label>
+                            <textarea class="form-control" id="registerAddress" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="registerBtn">
+                            Register
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const alertContainer = document.getElementById('alertContainer');
+        const registerModal = document.getElementById('registerModal');
+        const bsRegisterModal = new bootstrap.Modal(registerModal);
+
+        // Login form handler
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await API.login(email, password);
+                showAlert('Login successful! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } catch (error) {
+                showAlert(error.message || 'Login failed. Please check your credentials.', 'danger');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        });
+
+        // Register form handler
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const registerBtn = document.getElementById('registerBtn');
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...';
+
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const phone = document.getElementById('registerPhone').value;
+            const address = document.getElementById('registerAddress').value;
+
+            try {
+                const response = await API.register(name, email, password, phone, address);
+                showAlert('Registration successful! Redirecting...', 'success');
+                bsRegisterModal.hide();
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } catch (error) {
+                showAlert(error.message || 'Registration failed. Please try again.', 'danger');
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Register';
+            }
+        });
+
+        // Show alert
+        function showAlert(message, type) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+
+        // Check if already logged in
+        (async function () {
+            try {
+                const response = await API.checkAuth();
+                if (response.authenticated) {
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                console.log('Not authenticated');
+            }
+        })();
+    </script>
+</body>
+
+</html>

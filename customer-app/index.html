@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Ordering App - Best Food Delivery</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-transparent fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand text-white fw-bold fs-3" href="#">Food Ordering App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="orders.html">My Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white position-relative" href="cart.html">
+                            <i class="fas fa-shopping-cart"></i> Cart
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                id="cartBadge" style="display: none;">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" id="authNav">
+                        <a class="nav-link text-white" href="login.html">Log in</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-section d-flex align-items-center justify-content-center text-center text-white">
+        <div class="container">
+            <h1 class="display-1 fw-bold mb-3">Food Ordering App</h1>
+            <p class="lead fs-2 mb-5">Discover the best food & drinks in your city</p>
+
+            <div class="search-container bg-white p-2 rounded-3 d-flex align-items-center mx-auto">
+                <div class="location-input d-flex align-items-center px-3 border-end">
+                    <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                    <input type="text" class="form-control border-0 shadow-none" placeholder="New Delhi">
+                    <i class="fas fa-caret-down text-secondary ms-2"></i>
+                </div>
+                <div class="search-input d-flex align-items-center px-3 flex-grow-1">
+                    <i class="fas fa-search text-secondary me-2"></i>
+                    <input type="text" class="form-control border-0 shadow-none"
+                        placeholder="Search for restaurant, cuisine or a dish">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Categories Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="h3 fw-bold mb-4 text-dark">Inspiration for your first order</h2>
+            <div class="row g-4">
+                <!-- Category Item 1 -->
+                <div class="col-6 col-md-4 col-lg-2 text-center category-item">
+                    <div class="category-img-wrapper mb-2">
+                        <img src="https://b.zmtcdn.com/data/dish_images/d19a31d42d5913ff129cafd7cec772f51634721372.png"
+                            alt="Biryani" class="img-fluid rounded-circle">
+                    </div>
+                    <h5 class="h6 text-dark">Biryani</h5>
+                </div>
+                <!-- Category Item 2 -->
+                <div class="col-6 col-md-4 col-lg-2 text-center category-item">
+                    <div class="category-img-wrapper mb-2">
+                        <img src="https://b.zmtcdn.com/data/dish_images/ccb7dc2ba2b054419f805da7f05704471634886169.png"
+                            alt="Burger" class="img-fluid rounded-circle">
+                    </div>
+                    <h5 class="h6 text-dark">Burger</h5>
+                </div>
+                <!-- Category Item 3 -->
+                <div class="col-6 col-md-4 col-lg-2 text-center category-item">
+                    <div class="category-img-wrapper mb-2">
+                        <img src="https://b.zmtcdn.com/data/dish_images/197987b7ebcd1ee08f8c25ea4e77e20f1634731334.png"
+                            alt="Chicken" class="img-fluid rounded-circle">
+                    </div>
+                    <h5 class="h6 text-dark">Chicken</h5>
+                </div>
+                <!-- Category Item 4 -->
+                <div class="col-6 col-md-4 col-lg-2 text-center category-item">
+                    <div class="category-img-wrapper mb-2">
+                        <img src="https://b.zmtcdn.com/data/dish_images/d5ab931c8c239271de45e1c159af94311634805744.png"
+                            alt="Cake" class="img-fluid rounded-circle">
+                    </div>
+                    <h5 class="h6 text-dark">Cake</h5>
+                </div>
+                <!-- Category Item 5 -->
+                <div class="col-6 col-md-4 col-lg-2 text-center category-item">
+                    <div class="category-img-wrapper mb-2">
+                        <img src="https://b.zmtcdn.com/data/dish_images/c2f22c42f7ba90d81440a88449f4e5891634806087.png"
+                            alt="Rolls" class="img-fluid rounded-circle">
+                    </div>
+                    <h5 class="h6 text-dark">Rolls</h5>
+                </div>
+                <!-- Category Item 6 -->
+                <div class="col-6 col-md-4 col-lg-2 text-center category-item">
+                    <div class="category-img-wrapper mb-2">
+                        <img src="https://b.zmtcdn.com/data/dish_images/e44c42ff4b60b025225c8691ef9735b11635781903.png"
+                            alt="Paneer" class="img-fluid rounded-circle">
+                    </div>
+                    <h5 class="h6 text-dark">Paneer</h5>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters & Listing Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="h3 fw-bold mb-4">Delivery Restaurants in New Delhi</h2>
+
+            <!-- Filters -->
+            <div class="d-flex flex-wrap gap-3 mb-4">
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3">Filters <i
+                        class="fas fa-filter ms-1"></i></button>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3">Rating: 4.0+</button>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3">Pure Veg</button>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3">Cuisines <i
+                        class="fas fa-chevron-down ms-1"></i></button>
+            </div>
+
+            <!-- Restaurant Grid -->
+            <div class="row g-4" id="restaurantGrid">
+                <!-- Loading spinner -->
+                <div class="col-12 text-center py-5" id="loadingSpinner">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Loading restaurants...</p>
+                </div>
+                <!-- Restaurants will be loaded here dynamically -->
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-light pt-5 pb-3">
+        <div class="container">
+
+            <!-- Bootstrap Bundle JS -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="js/api.js"></script>
+            <script src="js/cart-manager.js"></script>
+            <script src="js/script.js"></script>
+</body>
+
+</html>

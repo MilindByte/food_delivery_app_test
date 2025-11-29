@@ -1,0 +1,93 @@
+/* Global Styles */
+body {
+    font-family: 'Inter', sans-serif;
+    color: #1c1c1c;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Merriweather', serif; /* Optional: Use serif for headings like Zomato sometimes does, or stick to Inter */
+    font-family: 'Inter', sans-serif; /* Sticking to Inter for a cleaner look */
+}
+
+/* Navbar */
+.navbar {
+    transition: all 0.3s ease;
+}
+
+.navbar.scrolled {
+    background-color: white !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.navbar.scrolled .navbar-brand,
+.navbar.scrolled .nav-link {
+    color: #1c1c1c !important;
+}
+
+/* Hero Section */
+.hero-section {
+    background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://b.zmtcdn.com/web_assets/81f3ff974d82520780078ba1cfbd453a1583259680.png');
+    background-size: cover;
+    background-position: center;
+    height: 60vh;
+    min-height: 450px;
+    position: relative;
+}
+
+.search-container {
+    max-width: 800px;
+    width: 100%;
+}
+
+.location-input {
+    min-width: 200px;
+}
+
+/* Categories */
+.category-img-wrapper {
+    overflow: hidden;
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    transition: transform 0.3s ease;
+    background-color: #f8f8f8;
+}
+
+.category-item:hover .category-img-wrapper {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.category-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Restaurant Card */
+.restaurant-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.restaurant-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+}
+
+.restaurant-card .card-img-top {
+    height: 240px;
+    object-fit: cover;
+}
+
+/* Footer */
+footer {
+    background-color: #f8f8f8;
+}
+
+.ls-1 {
+    letter-spacing: 1px;
+}

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Food Delivery</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .order-card {
+            transition: transform 0.2s;
+        }
+
+        .order-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3 text-danger" href="index.html">Food Delivery App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="orders.html">My Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="cart.html">
+                            <i class="fas fa-shopping-cart"></i> Cart
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                id="cartBadge" style="display: none;">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" id="authNav">
+                        <a class="nav-link" href="login.html">Log in</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Orders Section -->
+    <section class="py-5 bg-light min-vh-100">
+        <div class="container">
+            <h1 class="h2 fw-bold mb-4">My Orders</h1>
+
+            <div id="ordersContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="orderDetailsContent">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-danger" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light pt-5 pb-3">
+        <div class="container">
+            <p class="text-muted small">© 2025 Food Delivery App™ Ltd. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/cart-manager.js"></script>
+    <script>
+        const orderDetailsModal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            await checkAuthStatus();
+            await loadOrders();
+        });
+
+        async function checkAuthStatus() {
+            try {
+                const response = await API.checkAuth();
+                const authNav = document.getElementById('authNav');
+
+                if (response.authenticated && response.user) {
+                    authNav.innerHTML = `
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> ${response.user.name}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="orders.html">My Orders</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="handleLogout(event)">Logout</a></li>
+                        </ul>
+                    `;
+                } else {
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        async function handleLogout(e) {
+            e.preventDefault();
+            try {
+                await API.logout();
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        }
+
+        async function loadOrders() {
+            try {
+                const response = await API.getOrders();
+                displayOrders(response.data);
+            } catch (error) {
+                console.error('Failed to load orders:', error);
+                document.getElementById('ordersContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Failed to load orders. Please try again.
+                    </div>
+                `;
+            }
+        }
+
+        function displayOrders(orders) {
+            const ordersDiv = document.getElementById('ordersContent');
+
+            if (!orders || orders.length === 0) {
+                ordersDiv.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-receipt text-muted" style="font-size: 5rem;"></i>
+                        <h3 class="mt-4">No orders yet</h3>
+                        <p class="text-muted">Start ordering from your favorite restaurants</p>
+                        <a href="index.html" class="btn btn-danger mt-3">Browse Restaurants</a>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="row g-4">';
+            orders.forEach(order => {
+                const statusInfo = getStatusInfo(order.status);
+                const orderDate = new Date(order.created_at).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                html += `
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm order-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="card-title mb-1">${order.restaurant_name}</h5>
+                                        <p class="text-muted small mb-0">Order #${order.id}</p>
+                                        <p class="text-muted small mb-0">${orderDate}</p>
+                                    </div>
+                                    <span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">${order.item_count} item${order.item_count > 1 ? 's' : ''}</span>
+                                        <span class="fw-bold">₹${order.total_amount}</span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-wallet me-1"></i>
+                                        ${order.payment_method.toUpperCase()}
+                                    </small>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-danger btn-sm" onclick="viewOrderDetails(${order.id})">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            ordersDiv.innerHTML = html;
+        }
+
+        function getStatusInfo(status) {
+            const statusMap = {
+                'pending': { text: 'Pending', class: 'bg-warning text-dark' },
+                'confirmed': { text: 'Confirmed', class: 'bg-info text-white' },
+                'preparing': { text: 'Preparing', class: 'bg-primary text-white' },
+                'ready': { text: 'Ready for Pickup', class: 'bg-info text-white' },
+                'on_the_way': { text: 'On the Way', class: 'bg-success text-white' },
+                'delivered': { text: 'Delivered', class: 'bg-success text-white' },
+                'cancelled': { text: 'Cancelled', class: 'bg-danger text-white' }
+            };
+            return statusMap[status] || { text: status, class: 'bg-secondary text-white' };
+        }
+
+        async function viewOrderDetails(orderId) {
+            const contentDiv = document.getElementById('orderDetailsContent');
+            contentDiv.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-danger"></div></div>';
+
+            orderDetailsModal.show();
+
+            try {
+                const response = await API.getOrder(orderId);
+                const order = response.data;
+
+                const statusInfo = getStatusInfo(order.status);
+                const orderDate = new Date(order.created_at).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                let html = `
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h4>${order.restaurant_name}</h4>
+                                <p class="text-muted mb-1">Order #${order.id}</p>
+                                <p class="text-muted small">${orderDate}</p>
+                            </div>
+                            <span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Order Items</h6>
+                        <div class="list-group">
+                `;
+
+                order.items.forEach(item => {
+                    html += `
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="d-flex align-items-start">
+                                    <img src="${item.image_url || 'https://via.placeholder.com/60x60?text=Food'}" 
+                                         class="rounded me-3" 
+                                         style="width: 60px; height: 60px; object-fit: cover;"
+                                         alt="${item.name}">
+                                    <div>
+                                        <h6 class="mb-1">${item.name}</h6>
+                                        <small class="text-muted">
+                                            ${item.is_veg ? '<span class="badge bg-success">Veg</span>' : '<span class="badge bg-danger">Non-Veg</span>'}
+                                        </small>
+                                        <p class="mb-0 small text-muted">Qty: ${item.quantity}</p>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <p class="mb-0 fw-bold">₹${parseFloat(item.price * item.quantity).toFixed(2)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Delivery Address</h6>
+                        <p class="text-muted">${order.delivery_address}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-3">Payment</h6>
+                        <p class="text-muted">Method: ${order.payment_method.toUpperCase()}</p>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total Amount</span>
+                        <span class="fw-bold text-danger fs-5">₹${order.total_amount}</span>
+                    </div>
+                `;
+
+                contentDiv.innerHTML = html;
+            } catch (error) {
+                console.error('Failed to load order details:', error);
+                contentDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        Failed to load order details. Please try again.
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+
+</html>
