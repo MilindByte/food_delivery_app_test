@@ -1,9 +1,9 @@
 <?php
 // Database configuration for PostgreSQL
-define('DB_HOST', 'localhost');
-define('DB_PORT', '5432'); // PostgreSQL default port
-define('DB_USER', 'milind');
-define('DB_PASS', 'md@2025');
+define('DB_HOST', 'pg-3de34480-fooddeliverytest1.g.aivencloud.com');
+define('DB_PORT', '17948'); // PostgreSQL default port
+define('DB_USER', 'avnadmin');
+define('DB_PASS', 'AVNS_fi_u6qVvtO19a7dgU_-');
 define('DB_NAME', 'food_delivery');
 
 // Create database connection
@@ -76,3 +76,4 @@ function requireAuth() {
     return $_SESSION['user_id'];
 }
 ?>
+
